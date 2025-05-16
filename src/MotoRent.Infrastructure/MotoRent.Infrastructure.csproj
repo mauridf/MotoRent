@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+    <PackageReference Include="Minio" Version="6.0.4" />
+    <PackageReference Include="Minio.AspNetCore.HealthChecks" Version="6.0.1" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MotoRent.CrossCutting\MotoRent.CrossCutting.csproj" />
+    <ProjectReference Include="..\MotoRent.Domain\MotoRent.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
