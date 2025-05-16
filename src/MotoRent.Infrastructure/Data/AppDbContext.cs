@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MotoRent.Domain.Entities;
+using System.Linq;
+using System.Reflection.Emit;
 
 namespace MotoRent.Infrastructure.Data
 {
@@ -26,10 +28,56 @@ namespace MotoRent.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Filtro global para soft delete
+            // 1. Ignorar a criação da tabela BaseEntity
+            modelBuilder.Ignore<BaseEntity>();
+
+            // 2. Configurar cada entidade para incluir os campos da BaseEntity
+            foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                .Where(e => e.ClrType.BaseType == typeof(BaseEntity)))
+            {
+                // Configurar a tabela com o nome da entidade
+                modelBuilder.Entity(entityType.ClrType).ToTable(entityType.ClrType.Name);
+
+                // Configurar os campos herdados da BaseEntity
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(BaseEntity.Id))
+                    .HasColumnName("Id")
+                    .ValueGeneratedOnAdd();
+
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(BaseEntity.DataCriacao))
+                    .HasColumnName("DataCriacao")
+                    .IsRequired();
+
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(BaseEntity.DataAtualizacao))
+                    .HasColumnName("DataAtualizacao");
+
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(BaseEntity.IsDeleted))
+                    .HasColumnName("IsDeleted")
+                    .HasDefaultValue(false);
+
+                modelBuilder.Entity(entityType.ClrType).Property(nameof(BaseEntity.DataExclusao))
+                    .HasColumnName("DataExclusao");
+            }
+
+            // 3. Filtro global para soft delete
             modelBuilder.Entity<BaseEntity>().HasQueryFilter(e => !e.IsDeleted);
 
-            // Configurações de User
+            // 4. Configurações específicas para cada entidade
+            ConfigureUser(modelBuilder);
+            ConfigureEntregador(modelBuilder);
+            ConfigureAtendente(modelBuilder);
+            ConfigureFotoDocumento(modelBuilder);
+            ConfigureHabilitarEntregador(modelBuilder);
+            ConfigureMarca(modelBuilder);
+            ConfigureModelo(modelBuilder);
+            ConfigureMoto(modelBuilder);
+            ConfigureFotoMoto(modelBuilder);
+            ConfigureManutencao(modelBuilder);
+            ConfigureLocacao(modelBuilder);
+            ConfigureReserva(modelBuilder);
+        }
+
+        private void ConfigureUser(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<User>(entity =>
             {
                 entity.HasIndex(u => u.Username).IsUnique();
@@ -49,8 +97,10 @@ namespace MotoRent.Infrastructure.Data
                       .IsRequired(false)
                       .OnDelete(DeleteBehavior.Restrict);
             });
+        }
 
-            // Configurações de Entregador
+        private void ConfigureEntregador(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Entregador>(entity =>
             {
                 entity.HasIndex(e => e.CPF).IsUnique();
@@ -70,20 +120,10 @@ namespace MotoRent.Infrastructure.Data
                       .HasForeignKey<User>(u => u.EntregadorId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+        }
 
-            // Configurações de FotoDocumento
-            modelBuilder.Entity<FotoDocumento>(entity =>
-            {
-                entity.HasOne(f => f.Entregador)
-                      .WithMany(e => e.Documentos)
-                      .HasForeignKey(f => f.EntregadorId)
-                      .OnDelete(DeleteBehavior.Cascade);
-
-                entity.Property(f => f.Tipo)
-                      .HasMaxLength(50);
-            });
-
-            // Configurações de Atendente
+        private void ConfigureAtendente(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Atendente>(entity =>
             {
                 entity.HasIndex(a => a.CPF).IsUnique();
@@ -94,8 +134,23 @@ namespace MotoRent.Infrastructure.Data
                       .HasForeignKey<User>(u => u.AtendenteId)
                       .OnDelete(DeleteBehavior.Cascade);
             });
+        }
 
-            // Configurações de HabilitarEntregador
+        private void ConfigureFotoDocumento(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<FotoDocumento>(entity =>
+            {
+                entity.HasOne(f => f.Entregador)
+                      .WithMany(e => e.Documentos)
+                      .HasForeignKey(f => f.EntregadorId)
+                      .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(f => f.Tipo)
+                      .HasMaxLength(50);
+            });
+        }
+        private void ConfigureHabilitarEntregador(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<HabilitarEntregador>(entity =>
             {
                 entity.HasOne(h => h.Atendente)
@@ -111,15 +166,17 @@ namespace MotoRent.Infrastructure.Data
                 entity.Property(h => h.Observacao)
                       .HasMaxLength(500);
             });
-
-            // Configurações de Marca
+        }
+        private void ConfigureMarca(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Marca>(entity =>
             {
                 entity.HasIndex(m => m.Nome).IsUnique();
                 entity.Property(m => m.Nome).HasMaxLength(100);
             });
-
-            // Configurações de Modelo
+        }
+        private void ConfigureModelo(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Modelo>(entity =>
             {
                 entity.HasOne(m => m.Marca)
@@ -132,8 +189,9 @@ namespace MotoRent.Infrastructure.Data
                 // Índice composto para evitar modelos duplicados na mesma marca
                 entity.HasIndex(m => new { m.MarcaId, m.Nome }).IsUnique();
             });
-
-            // Configurações de Moto
+        }
+        private void ConfigureMoto(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Moto>(entity =>
             {
                 entity.HasIndex(m => m.Placa).IsUnique();
@@ -173,8 +231,9 @@ namespace MotoRent.Infrastructure.Data
                 entity.Property(m => m.ValorLocacaoDiaria).HasPrecision(8, 2);
                 entity.Property(m => m.ValorCaucao).HasPrecision(8, 2);
             });
-
-            // Configurações de FotoMoto
+        }
+        private void ConfigureFotoMoto(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<FotoMoto>(entity =>
             {
                 entity.HasOne(f => f.Moto)
@@ -185,8 +244,9 @@ namespace MotoRent.Infrastructure.Data
                 entity.Property(f => f.Tipo)
                       .HasMaxLength(50);
             });
-
-            // Configurações de Manutencao
+        }
+        private void ConfigureManutencao(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Manutencao>(entity =>
             {
                 entity.HasOne(m => m.Moto)
@@ -201,8 +261,9 @@ namespace MotoRent.Infrastructure.Data
                 entity.Property(m => m.Valor).HasPrecision(10, 2);
                 entity.Property(m => m.Km).HasPrecision(10, 2);
             });
-
-            // Configurações de Locacao
+        }
+        private void ConfigureLocacao(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Locacao>(entity =>
             {
                 entity.HasOne(l => l.Moto)
@@ -224,8 +285,9 @@ namespace MotoRent.Infrastructure.Data
                 entity.ToTable(t => t.HasCheckConstraint("CK_Locacao_Datas",
                     "\"DataFimPrevista\" > \"DataInicio\" AND (\"DataFimReal\" IS NULL OR \"DataFimReal\" >= \"DataInicio\")"));
             });
-
-            // Configurações de Reserva
+        }
+        private void ConfigureReserva(ModelBuilder modelBuilder)
+        {
             modelBuilder.Entity<Reserva>(entity =>
             {
                 entity.HasOne(r => r.Moto)

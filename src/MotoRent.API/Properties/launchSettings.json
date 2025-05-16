@@ -1,23 +1,29 @@
-﻿{
-  "$schema": "https://json.schemastore.org/launchsettings.json",
+{
   "profiles": {
     "http": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "http://localhost:5169",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5169"
     },
     "https": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": false,
-      "applicationUrl": "https://localhost:7178;http://localhost:5169",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "DB_PASSWORD": "Mt190720@",
+        "JWT_SECRET_KEY": "dzgwkposE/Bv3RVl3wyHkYKBGNpFdQQTPNBNa2fomHk=",
+        "MINIO_ENDPOINT": "localhost:9001",
+        "MINIO_ACCESS_KEY": "1TEv5VhwOE5PPhn08Lvr",
+        "MINIO_SECRET_KEY": "iexOdJc5aIcpryNnha4RDTPT931NSGzVfhRCMmkA",
+        "MINIO_ROOT_USER": "mauridf",
+        "MINIO_ROOT_PASSWORD": "Mt190720@",
+        "MINIO_DATA_PATH": "C:\\minio-data"
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "https://localhost:7178;http://localhost:5169"
     }
-  }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
 }

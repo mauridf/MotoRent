@@ -22,12 +22,12 @@ namespace MotoRent.CrossCutting.Security
             var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
 
             var claims = new List<Claim>
-        {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Username),
-            new(ClaimTypes.Email, user.Email),
-            new(ClaimTypes.Role, user.UserType.ToString())
-        };
+            {
+                new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new(ClaimTypes.Name, user.Username),
+                new(ClaimTypes.Email, user.Email),
+                new(ClaimTypes.Role, user.UserType.ToString())
+            };
 
             if (user.EntregadorId.HasValue)
             {
@@ -39,10 +39,13 @@ namespace MotoRent.CrossCutting.Security
                 claims.Add(new Claim("AtendenteId", user.AtendenteId.Value.ToString()));
             }
 
+            // Corrigindo o GetValue
+            var expireDays = _configuration.GetValue<int>("Jwt:ExpireDays", 7); // Valor padrão 7
+
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:ExpireDays")),
+                Expires = DateTime.UtcNow.AddDays(expireDays),
                 SigningCredentials = new SigningCredentials(
                     new SymmetricSecurityKey(key),
                     SecurityAlgorithms.HmacSha256Signature),
